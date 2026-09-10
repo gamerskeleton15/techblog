@@ -9,9 +9,16 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@mdx-js/react": "^3.1.1",
+    "@next/mdx": "^16.3.4",
+    "@upstash/redis": "^1.38.4",
+    "gray-matter": "^4.0.3",
     "next": "16.3.4",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "remark": "^15.0.1",
+    "remark-html": "^16.0.1",
+    "slugify": "^1.6.9"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
