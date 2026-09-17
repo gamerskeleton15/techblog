@@ -34,7 +34,11 @@ async function main() {
     `;
     console.log('insert ok, count:', res.count);
   } catch (e) {
-    console.error('INSERT ERROR:', e.message);
+    if (e instanceof Error) {
+      console.error('INSERT ERROR:', e.message);
+    } else {
+      console.error('INSERT ERROR:', String(e));
+    }
     process.exit(1);
   }
 
@@ -46,7 +50,11 @@ async function main() {
     `;
     console.log('rows:', JSON.stringify(rows));
   } catch (e) {
-    console.error('SELECT ERROR:', e.message);
+    if (e instanceof Error) {
+      console.error('SELECT ERROR:', e.message);
+    } else {
+      console.error('SELECT ERROR:', String(e));
+    }
     process.exit(1);
   }
 
