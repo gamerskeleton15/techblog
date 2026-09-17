@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 export default function DisclaimerPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -60,7 +58,7 @@ export default function DisclaimerPage() {
           <p>
             This website may contain copyrighted material the use of which has not
             always been specifically authorized by the copyright owner. We believe
-            this constitutes a "fair use" of any such copyrighted material for the
+            this constitutes a {"“fair use”"} of any such copyrighted material for the
             purposes of news reporting, criticism, comment, teaching, scholarship,
             and research.
           </p>
@@ -87,10 +85,10 @@ export default function DisclaimerPage() {
           </p>
 
           <h2 className="text-2xl font-semibold text-gray-800 mt-6 mb-4">
-            "Use at Your Own Risk" Disclaimer
+            “Use at Your Own Risk” Disclaimer
           </h2>
           <p>
-            All information in the website is provided "as is", with no guarantee
+            All information in the website is provided “as is”, with no guarantee
             of completeness, accuracy, timeliness or of the results obtained from
             the use of this information, and without warranty of any kind, express
             or implied, including, but not limited to warranties of performance,

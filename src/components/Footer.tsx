@@ -1,3 +1,6 @@
+import Link from 'next/link';
+import NewsletterForm from './NewsletterForm';
+
 export default function Footer() {
   return (
     <footer className="bg-gray-800 text-gray-200 py-8">
@@ -22,36 +25,36 @@ export default function Footer() {
             <h4 className="text-white font-bold mb-4">Navigation</h4>
             <ul className="space-y-2">
               <li>
-                <a
+                <Link
                   href="/"
                   className="hover:text-white transition-colors duration-200"
                 >
                   Home
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   href="/about"
                   className="hover:text-white transition-colors duration-200"
                 >
                   About
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   href="/contact"
                   className="hover:text-white transition-colors duration-200"
                 >
                   Contact
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   href="/blog"
                   className="hover:text-white transition-colors duration-200"
                 >
                   Blog
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -60,28 +63,28 @@ export default function Footer() {
             <h4 className="text-white font-bold mb-4">Legal</h4>
             <ul className="space-y-2">
               <li>
-                <a
+                <Link
                   href="/privacy-policy"
                   className="hover:text-white transition-colors duration-200"
                 >
                   Privacy Policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   href="/terms-of-service"
                   className="hover:text-white transition-colors duration-200"
                 >
                   Terms of Service
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   href="/disclaimer"
                   className="hover:text-white transition-colors duration-200"
                 >
                   Disclaimer
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -91,26 +94,7 @@ export default function Footer() {
             <p className="text-gray-400 mb-4">
               Subscribe for the latest tech insights and tutorials
             </p>
-            <form className="flex space-x-2">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="
-                  flex-1 px-3 py-2 bg-gray-700 border border-gray-600
-                  rounded-l text-white placeholder-gray-400 focus:outline-none
-                  focus:ring-2 focus:ring-blue-500
-                "
-              />
-              <button
-                type="submit"
-                className="
-                  bg-blue-600 hover:bg-blue-700 text-white font-medium
-                  py-2 px-4 rounded-r transition-colors duration-200
-                "
-              >
-                Subscribe
-              </button>
-            </form>
+            <NewsletterForm dark />
           </div>
         </div>
 

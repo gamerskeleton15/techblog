@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/auth';
 import { getUserPosts } from '@/lib/posts';
+import { deletePost } from '@/app/write/actions';
 import ProfileForm from '@/components/ProfileForm';
 
 function initials(name: string): string {
@@ -66,7 +67,7 @@ export default async function ProfilePage() {
 
           {myPosts.length === 0 ? (
             <div className="py-6 text-center">
-              <p className="text-gray-600 mb-3">You haven't published anything yet.</p>
+              <p className="text-gray-600 mb-3">You haven&apos;t published anything yet.</p>
               <Link
                 href="/write"
                 className="inline-block px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 rounded-lg transition-all duration-200"
@@ -77,16 +78,39 @@ export default async function ProfilePage() {
           ) : (
             <ul className="divide-y divide-gray-100">
               {myPosts.map((post) => (
-                <li key={post.id} className="py-4">
-                  <Link
-                    href={`/blog/${post.slug}`}
-                    className="text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    {post.title}
-                  </Link>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {new Date(post.date).toLocaleDateString()} · {post.category}
-                  </p>
+                <li key={post.id} className="py-4 flex items-center gap-4">
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={`/blog/${post.slug}`}
+                      className="text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      {post.title}
+                    </Link>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {new Date(post.date).toLocaleDateString()} · {post.category}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Link
+                      href={`/edit/${post.slug}`}
+                      className="px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 hover:text-blue-600 rounded-lg transition-colors duration-200"
+                    >
+                      Edit
+                    </Link>
+                    <form action={deletePost.bind(null, post.slug)}>
+                      <button
+                        type="submit"
+                        onClick={(e) => {
+                          if (!window.confirm('Delete this post? This cannot be undone.')) {
+                            e.preventDefault();
+                          }
+                        }}
+                        className="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                      >
+                        Delete
+                      </button>
+                    </form>
+                  </div>
                 </li>
               ))}
             </ul>

@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { getSessionUser, readUsers, writeUsers, User } from '@/lib/auth';
+import { getSessionUser } from '@/lib/auth';
+import { updateUserProfile } from '@/db/queries';
 import { saveUploadedFile } from '@/lib/uploads';
 
 export interface ProfileState {
@@ -42,16 +43,13 @@ export async function updateProfile(
   // Reflect the anonymous default name if the field was cleared.
   const nextName = name || user.email.split('@')[0];
 
-  const users = await readUsers();
-  const updatable = users.map((u: User): User => {
-    if (u.id !== user.id) return u;
-    return {
-      ...u,
-      name: nextName,
-      ...(avatar ? { avatar } : {}),
-    };
+  const { ok } = await updateUserProfile(user.id, {
+    name: nextName,
+    ...(avatar ? { avatar } : {}),
   });
-  await writeUsers(updatable);
+  if (!ok) {
+    return { error: 'Could not save your profile right now. Please try again.' };
+  }
 
   revalidatePath('/', 'layout');
   return { success: true };

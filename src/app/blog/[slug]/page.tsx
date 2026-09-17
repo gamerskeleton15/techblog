@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { getPostData, getAllPostIds, PostContent } from '@/lib/posts';
+import { getPostData, getAllPostIds } from '@/lib/posts';
+import AdSlot from '@/components/AdSlot';
 
 export async function generateStaticParams() {
   return await getAllPostIds();
@@ -101,6 +102,10 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
             className="prose prose-lg max-w-none text-gray-800"
             dangerouslySetInnerHTML={{ __html: postData.contentHtml }}
           />
+        </div>
+
+        <div className="my-8">
+          <AdSlot />
         </div>
 
         <div className="text-center">

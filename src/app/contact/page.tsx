@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import ContactForm from '@/components/ContactForm';
 
 export default function ContactPage() {
@@ -10,8 +9,8 @@ export default function ContactPage() {
         <div className="prose prose-lg mx-auto">
           <p>
             We value your feedback, questions, and suggestions. Whether you have a
-            topic you'd like us to cover, a correction for one of our articles, or
-            a business inquiry, we'd love to hear from you.
+            topic {"you'd"} like us to cover, a correction for one of our articles, or
+            a business inquiry, {"we'd"} love to hear from you.
           </p>
 
           <h2 className="text-2xl font-semibold text-gray-800 mt-6 mb-4">

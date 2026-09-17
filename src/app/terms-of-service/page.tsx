@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 export default function TermsOfServicePage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -78,7 +76,7 @@ export default function TermsOfServicePage() {
           </h2>
           <p>
             Your use of the Service is at your sole risk. The Service is provided
-            on an "AS IS" and "AS AVAILABLE" basis. The Service is provided
+            on an “AS IS” and “AS AVAILABLE” basis. The Service is provided
             without warranties of any kind, whether express or implied, including,
             but not limited to, implied warranties of merchantability, fitness for
             a particular purpose, non-infringement or course of performance.

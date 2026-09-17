@@ -4,18 +4,12 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import slugify from 'slugify';
 import { getSessionUser } from '@/lib/auth';
-import { storeGet, storeSet, NS } from '@/lib/store';
-import { getAllPostIds, getSortedPostsData, UserPost } from '@/lib/posts';
+import { deletePostBySlug, selectPostBySlug, upsertPost } from '@/db/queries';
+import { getAllPostIds, getSortedPostsData } from '@/lib/posts';
 import { saveUploadedFile } from '@/lib/uploads';
 
 export interface WriteState {
   error?: string;
-}
-
-const POSTS_KEY = `${NS}posts`;
-
-async function readUserPosts(): Promise<UserPost[]> {
-  return storeGet<UserPost[]>(POSTS_KEY, []);
 }
 
 async function existingSlugs(): Promise<Set<string>> {
@@ -25,6 +19,11 @@ async function existingSlugs(): Promise<Set<string>> {
   return slugs;
 }
 
+/**
+ * Create a new user post, or — when a `slug` hidden field is present and the
+ * current user owns that post — update the existing post in place (keeping
+ * the original slug and publish date, so internal links stay valid).
+ */
 export async function createPost(
   _prevState: WriteState,
   formData: FormData
@@ -39,6 +38,7 @@ export async function createPost(
   const category = String(formData.get('category') ?? '').trim();
   const tagsRaw = String(formData.get('tags') ?? '').trim();
   const content = String(formData.get('content') ?? '').trim();
+  const editingSlug = String(formData.get('slug') ?? '').trim();
 
   if (!title) {
     return { error: 'Please add a title.' };
@@ -52,8 +52,18 @@ export async function createPost(
     .map((t) => t.trim())
     .filter(Boolean);
 
-  // Optional cover image from the form's file input.
-  let coverImage = '';
+  // Editing an existing user post — verify ownership up front.
+  let existing: { slug: string; date: string; coverImage: string; authorId: string | null } | undefined;
+  if (editingSlug) {
+    existing = await selectPostBySlug(editingSlug);
+    if (!existing || existing.authorId !== user.id) {
+      return { error: 'You can only edit posts you have published.' };
+    }
+  }
+
+  // Optional cover image from the form's file input. On edit, keep the
+  // existing image unless a new one is uploaded.
+  let coverImage = existing?.coverImage ?? '';
   const cover = formData.get('cover');
   if (cover instanceof File && cover.size > 0) {
     try {
@@ -63,19 +73,18 @@ export async function createPost(
     }
   }
 
-  let slug = slugify(title, { lower: true, strict: true });
-  const taken = await existingSlugs();
-  if (slug && taken.has(slug)) {
-    slug = `${slug}-${Math.random().toString(36).slice(2, 5)}`;
-  }
-  if (!slug) {
-    slug = `post-${Date.now().toString(36)}`;
+  const slug = existing?.slug ?? (await makeSlug(title, existingSlugs));
+
+  // Create requires a cover image; an edit keeps whatever image it holds.
+  const isNew = !existing;
+  if (isNew && !coverImage) {
+    return { error: 'Please add a cover image. Every post needs one.' };
   }
 
-  const post: UserPost = {
-    slug,
+  const { ok } = await upsertPost({
+    slug: slug!,
     title,
-    date: new Date().toISOString().slice(0, 10),
+    date: existing?.date ?? new Date().toISOString().slice(0, 10),
     description,
     author: user.name || user.email,
     authorId: user.id,
@@ -83,14 +92,53 @@ export async function createPost(
     tags,
     coverImage,
     rawMarkdown: content,
-  };
-
-  const posts = await readUserPosts();
-  posts.push(post);
-  await storeSet(POSTS_KEY, posts);
+  });
+  if (!ok) {
+    return { error: 'Could not save your post right now. Please try again.' };
+  }
 
   revalidatePath('/', 'layout');
   revalidatePath('/blog');
   revalidatePath(`/blog/${slug}`);
   redirect(`/blog/${slug}`);
+}
+
+async function makeSlug(
+  title: string,
+  existingSlugs: () => Promise<Set<string>>
+): Promise<string> {
+  let slug = slugify(title, { lower: true, strict: true });
+  if (slug && (await existingSlugs()).has(slug)) {
+    slug = `${slug}-${Math.random().toString(36).slice(2, 5)}`;
+  }
+  if (!slug) {
+    slug = `post-${Date.now().toString(36)}`;
+  }
+  return slug;
+}
+
+/**
+ * Delete a user post. Only the owning author may delete it. Redirects back
+ * to the profile page so the updated list is re-rendered.
+ */
+export async function deletePost(slug: string): Promise<void> {
+  const user = await getSessionUser();
+  if (!user) {
+    redirect('/login');
+  }
+
+  const target = await selectPostBySlug(slug);
+  if (!target || target.authorId !== user.id) {
+    redirect(`/blog/${slug}`);
+  }
+
+  const { ok } = await deletePostBySlug(slug);
+  if (!ok) {
+    redirect(`/blog/${slug}`);
+  }
+
+  revalidatePath('/', 'layout');
+  revalidatePath('/blog');
+  revalidatePath('/profile');
+  redirect('/profile');
 }

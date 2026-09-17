@@ -1,6 +1,12 @@
 import { createHash, randomBytes, scrypt, timingSafeEqual } from 'crypto';
 import { cookies } from 'next/headers';
-import { storeGet, storeSet, NS } from './store';
+import {
+  deleteExpiredSessions,
+  deleteSessionByTokenHash,
+  insertSession,
+  selectSessionByTokenHash,
+  selectUserById,
+} from '@/db/queries';
 
 export interface User {
   id: string;
@@ -11,15 +17,6 @@ export interface User {
   createdAt: string;
   /** Public avatar image URL path (e.g. /uploads/avatars/…), when set. */
   avatar?: string;
-}
-
-const USERS_KEY = `${NS}users`;
-const SESSIONS_KEY = `${NS}sessions`;
-
-interface SessionRecord {
-  tokenHash: string;
-  userId: string;
-  expiresAt: number;
 }
 
 const SESSION_COOKIE = 'tb_session';
@@ -58,20 +55,24 @@ export async function verifyPassword(
   );
 }
 
-async function readUsers(): Promise<User[]> {
-  return storeGet<User[]>(USERS_KEY, []);
-}
-
-async function writeUsers(users: User[]): Promise<void> {
-  await storeSet(USERS_KEY, users);
-}
-
-async function readSessions(): Promise<SessionRecord[]> {
-  return storeGet<SessionRecord[]>(SESSIONS_KEY, []);
-}
-
-async function writeSessions(sessions: SessionRecord[]): Promise<void> {
-  await storeSet(SESSIONS_KEY, sessions);
+function toUser(row: {
+  id: string;
+  email: string;
+  name: string;
+  salt: string;
+  hash: string;
+  avatar: string | null;
+  createdAt: string;
+}): User {
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    salt: row.salt,
+    hash: row.hash,
+    createdAt: row.createdAt,
+    ...(row.avatar ? { avatar: row.avatar } : {}),
+  };
 }
 
 /** Read the current logged-in user from the request cookie, or null. */
@@ -79,30 +80,28 @@ export async function getSessionUser(): Promise<User | null> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return null;
 
-  const tokenHash = sha256(token);
-  const record = (await readSessions()).find((s) => s.tokenHash === tokenHash);
+  const record = await selectSessionByTokenHash(sha256(token));
   if (!record || record.expiresAt < Date.now()) return null;
 
-  const user = (await readUsers()).find((u) => u.id === record.userId);
-  return user ?? null;
+  const user = await selectUserById(record.userId);
+  return user ? toUser(user) : null;
 }
 
 /**
- * Create a session for the given user and set the auth cookie.
+ * Create a session for the given user and set the auth cookie. Housekeep
+ * expired sessions in passing (Postgres makes this a single DELETE).
  * Writes a cookie, so it must only be called from a Server Function or
  * Route Handler (not from Server Components during render).
  */
 export async function createSession(userId: string): Promise<void> {
   const token = randomBytes(32).toString('hex');
-  const record: SessionRecord = {
+
+  await insertSession({
     tokenHash: sha256(token),
     userId,
     expiresAt: Date.now() + SESSION_TTL_MS,
-  };
-
-  const sessions = await readSessions();
-  sessions.push(record);
-  await writeSessions(sessions);
+  });
+  void deleteExpiredSessions(Date.now());
 
   (await cookies()).set(SESSION_COOKIE, token, {
     httpOnly: true,
@@ -117,12 +116,7 @@ export async function createSession(userId: string): Promise<void> {
 export async function destroySession(): Promise<void> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (token) {
-    const tokenHash = sha256(token);
-    await writeSessions(
-      (await readSessions()).filter((s) => s.tokenHash !== tokenHash)
-    );
+    await deleteSessionByTokenHash(sha256(token));
   }
   (await cookies()).delete(SESSION_COOKIE);
 }
-
-export { readUsers, writeUsers };

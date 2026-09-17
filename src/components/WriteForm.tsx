@@ -4,12 +4,30 @@ import { useActionState, useRef, useState } from 'react';
 import Link from 'next/link';
 import { createPost, WriteState } from '@/app/write/actions';
 
-export default function WriteForm() {
+/**
+ * Create (and, when `initialPost` is passed, edit) a post. Editing posts a
+ * hidden `slug` field so the server upserts the user's existing post rather
+ * than creating a duplicate.
+ */
+export default function WriteForm({
+  initialPost,
+}: {
+  initialPost?: {
+    slug: string;
+    title: string;
+    description: string;
+    category: string;
+    tags: string[];
+    coverImage: string;
+    content: string;
+  };
+}) {
   const [state, formAction, pending] = useActionState<WriteState, FormData>(
     createPost,
     {}
   );
 
+  const editing = Boolean(initialPost);
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -54,18 +72,20 @@ export default function WriteForm() {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
-          <Link href="/" className="text-blue-600 hover:underline text-sm">
-            ← Back to home
+          <Link href={editing ? '/profile' : '/'} className="text-blue-600 hover:underline text-sm">
+            ← Back to {editing ? 'your profile' : 'home'}
           </Link>
         </div>
 
         <div className="bg-white rounded-2xl shadow-md p-8">
           <header className="mb-6">
             <h1 className="text-3xl font-bold text-gray-900 font-syne tracking-tight">
-              Write a post
+              {editing ? 'Edit post' : 'Write a post'}
             </h1>
             <p className="mt-1 text-gray-600">
-              Publish a new article to the blog. Markdown is supported.
+              {editing
+                ? `Editing “${initialPost?.title}”. Markdown is supported.`
+                : 'Publish a new article to the blog. Markdown is supported.'}
             </p>
           </header>
 
@@ -74,6 +94,10 @@ export default function WriteForm() {
               <div className="px-4 py-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
                 {state.error}
               </div>
+            )}
+
+            {editing && (
+              <input type="hidden" name="slug" value={initialPost?.slug} />
             )}
 
             <div>
@@ -85,6 +109,7 @@ export default function WriteForm() {
                 id="title"
                 name="title"
                 required
+                defaultValue={initialPost?.title}
                 placeholder="Your article title"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
@@ -98,6 +123,7 @@ export default function WriteForm() {
                 type="text"
                 id="description"
                 name="description"
+                defaultValue={initialPost?.description}
                 placeholder="A one-line summary (shown on the blog list)"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
@@ -105,13 +131,19 @@ export default function WriteForm() {
 
             <div>
               <label htmlFor="cover" className="block text-sm font-medium text-gray-700 mb-1">
-                Cover image <span className="font-normal text-gray-400">(optional)</span>
+                Cover image{' '}
+                <span className="font-normal text-gray-400">
+                  {editing
+                    ? '(leave empty to keep the current image)'
+                    : '(required)'}
+                </span>
               </label>
               <input
                 type="file"
                 id="cover"
                 name="cover"
                 accept="image/*"
+                required={!editing}
                 className="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
               />
             </div>
@@ -125,6 +157,7 @@ export default function WriteForm() {
                   type="text"
                   id="category"
                   name="category"
+                  defaultValue={initialPost?.category}
                   placeholder="e.g. Programming"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
@@ -137,6 +170,7 @@ export default function WriteForm() {
                   type="text"
                   id="tags"
                   name="tags"
+                  defaultValue={initialPost?.tags.join(', ')}
                   placeholder="comma, separated, tags"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
@@ -175,6 +209,7 @@ export default function WriteForm() {
                 ref={contentRef}
                 required
                 rows={12}
+                defaultValue={initialPost?.content}
                 placeholder={"## Your heading\n\nWrite your article in Markdown here."}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
               />
@@ -182,7 +217,7 @@ export default function WriteForm() {
 
             <div className="flex items-center justify-end gap-3">
               <Link
-                href="/blog"
+                href={editing ? '/profile' : '/blog'}
                 className="px-5 py-3 text-sm font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 rounded-lg transition-colors duration-200"
               >
                 Cancel
@@ -192,7 +227,7 @@ export default function WriteForm() {
                 disabled={pending}
                 className="px-6 py-3 text-white font-semibold bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 rounded-lg transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {pending ? 'Publishing…' : 'Publish'}
+                {pending ? (editing ? 'Saving…' : 'Publishing…') : editing ? 'Save changes' : 'Publish'}
               </button>
             </div>
           </form>

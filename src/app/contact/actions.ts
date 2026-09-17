@@ -1,28 +1,17 @@
 'use server';
 
-import { storeGet, storeSet, NS } from '@/lib/store';
+import { insertMessage, MessageRow } from '@/db/queries';
 
 export interface ContactState {
   error?: string;
   success?: boolean;
 }
 
-const MESSAGES_KEY = `${NS}messages`;
-
-interface ContactMessage {
-  id: string;
-  name: string;
-  email: string;
-  subject: string;
-  message: string;
-  createdAt: string;
-}
-
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
- * Validate and store a visitor-submitted contact message in Redis under
- * `techblog:messages`. Returns a success or error state for the form.
+ * Validate and store a visitor-submitted contact message in Postgres.
+ * Returns a success or error state for the form.
  */
 export async function submitMessage(
   _prevState: ContactState,
@@ -46,7 +35,7 @@ export async function submitMessage(
     return { error: 'Message is too long (max 5000 characters).' };
   }
 
-  const record: ContactMessage = {
+  const record: MessageRow = {
     id:
       Date.now().toString(36) +
       Math.random().toString(36).slice(2, 10),
@@ -57,9 +46,10 @@ export async function submitMessage(
     createdAt: new Date().toISOString(),
   };
 
-  const messages = await storeGet<ContactMessage[]>(MESSAGES_KEY, []);
-  messages.push(record);
-  await storeSet(MESSAGES_KEY, messages);
+  const { ok } = await insertMessage(record);
+  if (!ok) {
+    return { error: 'Could not send your message right now. Please try again.' };
+  }
 
   return { success: true };
 }

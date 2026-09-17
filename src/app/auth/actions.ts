@@ -6,11 +6,9 @@ import {
   createSession,
   destroySession,
   hashPassword,
-  readUsers,
   verifyPassword,
-  writeUsers,
-  User,
 } from '@/lib/auth';
+import { insertUser, selectUserByEmail } from '@/db/queries';
 
 export interface AuthState {
   error?: string;
@@ -37,30 +35,34 @@ export async function authenticate(
     return { error: 'Password must be at least 6 characters.' };
   }
 
-  const users = await readUsers();
-  let user = users.find((u: User) => u.email === email);
+  const existing = await selectUserByEmail(email);
 
-  if (!user) {
+  let userId: string;
+  if (!existing) {
     // First login with this email -> create the account.
     const { salt, hash } = await hashPassword(password);
-    user = {
-      id: randomId(),
+    const id = randomId();
+    const { ok } = await insertUser({
+      id,
       email,
       name: email.split('@')[0],
       salt,
       hash,
       createdAt: new Date().toISOString(),
-    };
-    users.push(user);
-    await writeUsers(users);
+    });
+    if (!ok) {
+      return { error: 'Could not sign you in right now. Please try again.' };
+    }
+    userId = id;
   } else {
-    const ok = await verifyPassword(password, user.salt, user.hash);
+    const ok = await verifyPassword(password, existing.salt, existing.hash);
     if (!ok) {
       return { error: 'Invalid email or password.' };
     }
+    userId = existing.id;
   }
 
-  await createSession(user.id);
+  await createSession(userId);
   revalidatePath('/', 'layout');
   redirect('/');
 }

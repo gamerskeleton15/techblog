@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -14,7 +12,7 @@ export default function PrivacyPolicyPage() {
           </p>
 
           <p>
-            TechBlog ("us", "we", or "our") operates the TechBlog website. This
+            TechBlog (“us”, “we”, or “our”) operates the TechBlog website. This
             page informs you of our policies regarding the collection, use, and
             disclosure of personal information when you use our Service.
           </p>
@@ -30,14 +28,14 @@ export default function PrivacyPolicyPage() {
             <li>
               Personal Data: While using our Service, we may ask you to provide
               us with certain personally identifiable information that can be used
-              to contact or identify you ("Personal Data"). This may include, but
+              to contact or identify you (“Personal Data”). This may include, but
               is not limited to your email address, name, and cookies and usage
               data.
             </li>
             <li>
               Usage Data: We may also collect information how the Service is
-              accessed and used ("Usage Data"). This Usage Data may include
-              information such as your computer's Internet Protocol address (e.g.
+              accessed and used (“Usage Data”). This Usage Data may include
+              information such as your computer’s Internet Protocol address (e.g.
               IP address), browser type, browser version, the pages of our Service
               that you visit, the time and date of your visit, the time spent on
               those pages, unique device identifiers and other diagnostic data.
@@ -94,8 +92,8 @@ export default function PrivacyPolicyPage() {
           </h2>
           <p>
             We use Google AdSense to serve advertisements on our website. Google
-            AdSense uses cookies to serve ads based on a user's prior visits to
-            your website or other websites on the internet. Google's use of
+            AdSense uses cookies to serve ads based on a user’s prior visits to
+            your website or other websites on the internet. Google’s use of
             advertising cookies enables it and its partners to serve ads based on
             your visit to this site and/or other sites on the internet. You may
             opt out of personalized advertising by visiting{' '}
@@ -110,11 +108,11 @@ export default function PrivacyPolicyPage() {
           </p>
 
           <h2 className="text-2xl font-semibold text-gray-800 mt-6 mb-4">
-            Children's Privacy
+            Children’s Privacy
           </h2>
           <p>
             Our Service does not address anyone under the age of 13
-            ("Children"). We do not knowingly collect personally identifiable
+            (“Children”). We do not knowingly collect personally identifiable
             information from anyone under the age of 13. If you are a parent or
             guardian and you are aware that your child has provided us with
             Personal Data, please contact us. If we become aware that we have

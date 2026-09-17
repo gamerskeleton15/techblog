@@ -1,0 +1,169 @@
+---
+title: 'How I Built My First Machine Learning Model: A Beginner''s Journey'
+description: 'A hands-on walkthrough of building a machine learning model from scratch — data preparation, training, evaluation, and lessons learned along the way.'
+date: '2026-07-10'
+author: 'Abdul Ahad'
+category: 'Machine Learning'
+tags: ['machine-learning', 'python', 'scikit-learn', 'beginners', 'data-science']
+coverImage: '/images/ml-projects.svg'
+slug: 'first-machine-learning-model'
+---
+
+I still remember the moment my first machine learning model produced a prediction that was actually correct. It was a Titanic survival classifier — yes, the classic Kaggle starter problem — but the rush of watching numbers on a screen correspond to real human outcomes was something I didn't expect to feel so strongly. This post is the walkthrough I wish had existed when I was starting out.
+
+## Why the Titanic Dataset?
+
+Every ML course recommends it, and for good reason. The Titanic dataset is small enough to run on any laptop, rich enough to teach you real skills, and emotionally grounded — you're predicting whether a person survived, not just classifying abstract blobs. It teaches you feature engineering, handling missing data, categorical encoding, and binary classification all in one go.
+
+You can download it from [Kaggle](https://www.kaggle.com/c/titanic/data) or load it directly with:
+
+```python
+import pandas as pd
+df = pd.read_csv('train.csv')
+print(df.shape)       # (891, 12)
+print(df.head())
+```
+
+## Step 1 — Understand Your Data First
+
+Before touching a single model, spend serious time with `df.info()`, `df.describe()`, and `df.isnull().sum()`. Here's what I found:
+
+```python
+df.isnull().sum()
+# Age        177
+# Cabin      687
+# Embarked     2
+```
+
+Three columns with missing values. `Cabin` is missing 77 % of the time — I dropped it entirely. `Age` I filled with the median grouped by passenger class (a better estimate than the global median). `Embarked` I filled with the mode ('S').
+
+```python
+df['Age'] = df.groupby('Pclass')['Age'].transform(
+    lambda x: x.fillna(x.median())
+)
+df['Embarked'].fillna(df['Embarked'].mode()[0], inplace=True)
+df.drop(columns=['Cabin', 'Name', 'Ticket'], inplace=True)
+```
+
+**Lesson:** garbage in, garbage out. A model trained on badly handled missing data will be confidently wrong.
+
+## Step 2 — Feature Engineering
+
+Raw columns rarely tell the full story. I created two new features:
+
+```python
+# Family size is more informative than SibSp and Parch separately
+df['FamilySize'] = df['SibSp'] + df['Parch'] + 1
+
+# Travelling alone is a meaningful signal
+df['IsAlone'] = (df['FamilySize'] == 1).astype(int)
+```
+
+I also encoded categorical columns. `Sex` became 0/1 with label encoding; `Embarked` became one-hot columns:
+
+```python
+df['Sex'] = df['Sex'].map({'male': 0, 'female': 1})
+df = pd.get_dummies(df, columns=['Embarked'], drop_first=True)
+```
+
+## Step 3 — Train/Validation Split
+
+Never evaluate a model on the data it trained on. I used an 80/20 split:
+
+```python
+from sklearn.model_selection import train_test_split
+
+features = ['Pclass', 'Sex', 'Age', 'Fare', 'FamilySize', 'IsAlone',
+            'Embarked_Q', 'Embarked_S']
+X = df[features]
+y = df['Survived']
+
+X_train, X_val, y_train, y_val = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+```
+
+The `stratify=y` argument ensures both splits have the same proportion of survivors — important for any imbalanced binary target.
+
+## Step 4 — Train the Model
+
+I started with Logistic Regression (always start simple) then moved to Random Forest:
+
+```python
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report
+
+# Baseline
+lr = LogisticRegression(max_iter=1000)
+lr.fit(X_train, y_train)
+preds_lr = lr.predict(X_val)
+print(f"Logistic Regression accuracy: {accuracy_score(y_val, preds_lr):.4f}")
+# → 0.8101
+
+# Random Forest
+rf = RandomForestClassifier(n_estimators=200, max_depth=6, random_state=42)
+rf.fit(X_train, y_train)
+preds_rf = rf.predict(X_val)
+print(f"Random Forest accuracy: {accuracy_score(y_val, preds_rf):.4f}")
+# → 0.8324
+```
+
+## Step 5 — Evaluate Properly
+
+Accuracy alone is misleading on imbalanced data. The full classification report tells a richer story:
+
+```python
+print(classification_report(y_val, preds_rf))
+#               precision    recall  f1-score
+# 0 (died)         0.87      0.88      0.87
+# 1 (survived)     0.78      0.76      0.77
+```
+
+The model is better at predicting deaths than survivals — which makes sense given the class imbalance (38 % survived). This is something you can't see from accuracy alone.
+
+## Step 6 — Feature Importance
+
+One of the things I love about tree-based models is interpretability:
+
+```python
+import matplotlib.pyplot as plt
+import pandas as pd
+
+importances = pd.Series(rf.feature_importances_, index=features)
+importances.sort_values().plot(kind='barh', figsize=(8, 5))
+plt.title('Feature Importances')
+plt.tight_layout()
+plt.show()
+```
+
+`Sex` and `Fare` came out on top, followed by `Age` and `Pclass`. Matches historical intuition — women and wealthy passengers were prioritised for lifeboats.
+
+## What I Got Wrong (And You Might Too)
+
+1. **I scaled features before splitting.** This is data leakage — the scaler learns statistics from validation data. Always fit the scaler on `X_train` only, then transform both.
+2. **I tuned hyperparameters on the validation set.** That means my validation accuracy is optimistically biased. Use cross-validation or a held-out test set for final evaluation.
+3. **I ignored class imbalance.** Adding `class_weight='balanced'` to both models bumped recall on the minority class by ~4 percentage points.
+
+## The Corrected Scaling Pattern
+
+```python
+from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)   # fit ONLY on train
+X_val_scaled   = scaler.transform(X_val)          # transform val with train stats
+```
+
+## What to Build Next
+
+Once you've completed a project like this, the natural progression is:
+- Try **gradient boosting** (XGBoost, LightGBM) — typically outperforms random forests on tabular data
+- Apply **cross-validation** with `cross_val_score` for more reliable estimates
+- Move to a **regression problem** (e.g., house price prediction) to learn continuous output evaluation
+
+## Conclusion
+
+Building your first ML model is less about the model and more about the process: understanding your data, making deliberate engineering choices, and evaluating honestly. The Titanic classifier I built that day wasn't state-of-the-art, but it taught me more than any lecture could. Start with something small, understand every line of code you write, and iterate from there.
+
+The skills compound quickly. For a deeper dive into project ideas once you've got this foundation, check out [Top 5 Machine Learning Projects for Beginners](/blog/machine-learning-projects).

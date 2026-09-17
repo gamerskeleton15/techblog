@@ -3,10 +3,10 @@ import path from 'path';
 import matter from 'gray-matter';
 import { remark } from 'remark';
 import html from 'remark-html';
-import { storeGet, NS } from './store';
+import { selectPostBySlug, selectAllPosts, PostRow } from '../db/queries';
+import { sanitizePostHtml } from './sanitize';
 
 const postsDirectory = path.join(process.cwd(), 'content/posts');
-const POSTS_KEY = `${NS}posts`;
 
 export interface PostData {
   id: string;
@@ -28,7 +28,7 @@ export interface PostContent extends PostData {
   isUserContent?: boolean;
 }
 
-/** A post authored by a logged-in user, stored in Upstash. */
+/** A post authored by a logged-in user, stored in Postgres. */
 export interface UserPost {
   slug: string;
   title: string;
@@ -65,23 +65,41 @@ function readMdxPostData(): PostData[] {
     });
 }
 
-async function readUserPosts(): Promise<UserPost[]> {
-  return storeGet<UserPost[]>(POSTS_KEY, []);
+function toUserPost(row: PostRow): UserPost {
+  return {
+    slug: row.slug,
+    title: row.title,
+    date: row.date,
+    description: row.description,
+    author: row.author,
+    authorId: row.authorId ?? '',
+    category: row.category,
+    tags: row.tags,
+    coverImage: row.coverImage,
+    rawMarkdown: row.rawMarkdown,
+  };
+}
+
+/** Fetch a single user-submitted post (full record incl. rawMarkdown), or undefined. */
+export async function getUserPostBySlug(slug: string): Promise<UserPost | undefined> {
+  const row = await selectPostBySlug(slug);
+  return row ? toUserPost(row) : undefined;
 }
 
 /** User-submitted posts, mapped into the shared PostData shape. */
 export async function getUserPosts(): Promise<PostData[]> {
-  return (await readUserPosts()).map((post) => ({
-    id: post.slug,
-    slug: post.slug,
-    title: post.title,
-    date: post.date,
-    description: post.description,
-    author: post.author,
-    category: post.category,
-    tags: post.tags,
-    coverImage: post.coverImage,
-    authorId: post.authorId,
+  const rows = await selectAllPosts();
+  return rows.map((row) => ({
+    id: row.slug,
+    slug: row.slug,
+    title: row.title,
+    date: row.date,
+    description: row.description,
+    author: row.author,
+    category: row.category,
+    tags: row.tags,
+    coverImage: row.coverImage,
+    authorId: row.authorId ?? undefined,
   }));
 }
 
@@ -104,8 +122,8 @@ export async function getAllPostIds(): Promise<{ slug: string }[]> {
   } catch {
     /* posts dir missing — user posts only */
   }
-  for (const post of await readUserPosts()) {
-    slugs.add(post.slug);
+  for (const row of await selectAllPosts()) {
+    slugs.add(row.slug);
   }
   return Array.from(slugs).map((slug) => ({ slug }));
 }
@@ -119,28 +137,28 @@ export async function getPostData(slug: string): Promise<PostContent> {
     const processedContent = await remark().use(html).process(matterResult.content);
     return {
       slug,
-      contentHtml: processedContent.toString(),
+      contentHtml: sanitizePostHtml(processedContent.toString()),
       ...(matterResult.data as Omit<PostContent, 'slug' | 'contentHtml' | 'isUserContent'>),
     };
   }
 
-  // 2) Fall back to a user-submitted post in Upstash.
-  const post = (await readUserPosts()).find((p) => p.slug === slug);
-  if (post) {
-    const processedContent = await remark().use(html).process(post.rawMarkdown);
+  // 2) Fall back to a user-submitted post in Postgres.
+  const row = await selectPostBySlug(slug);
+  if (row) {
+    const processedContent = await remark().use(html).process(row.rawMarkdown);
     return {
-      id: post.slug,
-      slug: post.slug,
-      title: post.title,
-      date: post.date,
-      description: post.description,
-      author: post.author,
-      category: post.category,
-      tags: post.tags,
-      coverImage: post.coverImage,
-      contentHtml: processedContent.toString(),
+      id: row.slug,
+      slug: row.slug,
+      title: row.title,
+      date: row.date,
+      description: row.description,
+      author: row.author,
+      category: row.category,
+      tags: row.tags,
+      coverImage: row.coverImage,
+      contentHtml: sanitizePostHtml(processedContent.toString()),
       isUserContent: true,
-      authorId: post.authorId,
+      authorId: row.authorId ?? undefined,
     };
   }
 

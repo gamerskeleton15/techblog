@@ -9,7 +9,7 @@ export default function NotFound() {
           Page Not Found
         </h2>
         <p className="text-gray-600 mb-8">
-          Sorry, we couldn't find the page you're looking for. It might have been
+          {"Sorry, we couldn't find the page you're looking for. It might have been "}
           moved, deleted, or is temporarily unavailable.
         </p>
 

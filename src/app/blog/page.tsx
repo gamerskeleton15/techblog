@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getSortedPostsData, PostData } from '@/lib/posts';
+import AdSlot from '@/components/AdSlot';
 
 export default async function BlogPage() {
   const allPosts = await getSortedPostsData();
@@ -70,6 +71,10 @@ export default async function BlogPage() {
             <p className="text-gray-600">No blog posts found.</p>
           </div>
         )}
+
+        <div className="mt-12">
+          <AdSlot />
+        </div>
       </div>
     </div>
   );

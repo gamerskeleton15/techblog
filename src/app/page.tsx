@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getSortedPostsData, PostData } from '@/lib/posts';
+import NewsletterForm from '@/components/NewsletterForm';
 
 export default async function Home() {
   const allPosts = await getSortedPostsData();
@@ -198,27 +199,9 @@ export default async function Home() {
             Subscribe to our newsletter for the latest tech insights and tutorials
           </p>
 
-          <form className="max-w-md mx-auto flex gap-4">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="
-                flex-1 px-4 py-3 border border-gray-300 rounded-lg
-                focus:outline-none focus:ring-2 focus:ring-blue-500
-                focus:border-transparent
-              "
-              required
-            />
-            <button
-              type="submit"
-              className="
-                bg-blue-600 hover:bg-blue-700 text-white font-medium
-                py-3 px-6 rounded-lg transition-colors duration-200
-              "
-            >
-              Subscribe
-            </button>
-          </form>
+          <div className="max-w-md mx-auto">
+            <NewsletterForm />
+          </div>
 
           <p className="text-sm text-gray-500 mt-4">
             We respect your privacy. Unsubscribe at any time.
