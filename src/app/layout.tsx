@@ -30,7 +30,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} ${syne.variable} ${inter.className}`}>
-      <head>
+      <body>
+        <NavbarContainer />
+        <main className="min-h-screen pb-16">{children}</main>
+        <Footer />
         {ADSENSE_CLIENT && (
           <Script
             async
@@ -39,11 +42,6 @@ export default function RootLayout({
             strategy="afterInteractive"
           />
         )}
-      </head>
-      <body>
-        <NavbarContainer />
-        <main className="min-h-screen pb-16">{children}</main>
-        <Footer />
       </body>
     </html>
   );
