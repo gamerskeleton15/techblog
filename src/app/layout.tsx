@@ -1,6 +1,5 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import Script from 'next/script';
 import { Inter, Syne } from 'next/font/google';
 import NavbarContainer from '@/components/NavbarContainer';
 import Footer from '@/components/Footer';
@@ -29,11 +28,10 @@ export default function RootLayout({
         <NavbarContainer />
         <main className="min-h-screen pb-16">{children}</main>
         <Footer />
-        <Script
+        <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3517858716332831"
           crossOrigin="anonymous"
-          strategy="afterInteractive"
         />
       </body>
     </html>
