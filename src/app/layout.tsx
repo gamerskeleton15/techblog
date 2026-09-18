@@ -5,11 +5,6 @@ import { Inter, Syne } from 'next/font/google';
 import NavbarContainer from '@/components/NavbarContainer';
 import Footer from '@/components/Footer';
 
-// AdSense publisher ID. When unset, the adsbygoogle script is not loaded and
-// AdSlot components render as placeholders. Set NEXT_PUBLIC_ADSENSE_CLIENT
-// (e.g. "ca-pub-XXXXXXXXXXXX") after your AdSense account is approved.
-const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || '';
-
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const syne = Syne({ subsets: ['latin'], weight: ['700', '800'], variable: '--font-syne' });
 
@@ -34,14 +29,12 @@ export default function RootLayout({
         <NavbarContainer />
         <main className="min-h-screen pb-16">{children}</main>
         <Footer />
-        {ADSENSE_CLIENT && (
-          <Script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
-            crossOrigin="anonymous"
-            strategy="afterInteractive"
-          />
-        )}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3517858716332831"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
