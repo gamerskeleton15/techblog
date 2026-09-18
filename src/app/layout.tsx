@@ -32,8 +32,12 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${syne.variable} ${inter.className}`}>
       <head>
         {ADSENSE_CLIENT && (
-          <Script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3517858716332831"
-            crossOrigin="anonymous"><script/>
+          <Script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+            crossOrigin="anonymous"
+            strategy="beforeInteractive"
+          />
         )}
       </head>
       <body>
