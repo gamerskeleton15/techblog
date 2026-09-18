@@ -42,20 +42,6 @@ export default function RootLayout({
             strategy="afterInteractive"
           />
         )}
-        <Script
-          id="monetag-in-page-push"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `(function(s){s.dataset.zone='11830257',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`,
-          }}
-        />
-        <Script
-          id="monetag-zone-282471"
-          src="https://quge5.com/88/tag.min.js"
-          data-zone="282471"
-          data-cfasync="false"
-          strategy="afterInteractive"
-        />
       </body>
     </html>
   );
