@@ -1,0 +1,169 @@
+---
+title: 'Understanding Neural Networks: A Practical Introduction'
+description: 'Cut through the hype and understand how neural networks actually work — from the perceptron to backpropagation — with working Python examples.'
+date: '2026-08-05'
+author: 'Abdul Ahad'
+category: 'Machine Learning'
+tags: ['neural-networks', 'deep-learning', 'python', 'pytorch', 'beginners']
+coverImage: '/images/ai-getting-started.svg'
+slug: 'understanding-neural-networks'
+---
+
+Neural networks get a mystical reputation they don't deserve. At their core they're function approximators built from a surprisingly simple primitive: the artificial neuron. Once you understand what a single neuron does, the jump to a full deep learning model is just arithmetic repeated many times. This post is a practical introduction — we'll go from the math to working PyTorch code step by step.
+
+## The Artificial Neuron
+
+A biological neuron fires when the sum of its inputs crosses a threshold. The artificial version does something analogous:
+
+```
+output = activation(w₁x₁ + w₂x₂ + ... + wₙxₙ + b)
+```
+
+- **x₁…xₙ** are the inputs (features)
+- **w₁…wₙ** are learnable weights
+- **b** is a bias term (shifts the activation)
+- **activation** is a non-linear function — without it, stacking layers is mathematically equivalent to a single layer
+
+The most widely-used activation today is ReLU (Rectified Linear Unit): `f(x) = max(0, x)`. It's cheap to compute and avoids the vanishing gradient problem that plagued earlier sigmoid networks.
+
+## From One Neuron to a Layer
+
+A **layer** is nothing more than many neurons operating in parallel, each looking at the same input but with different weights:
+
+```python
+import torch
+import torch.nn as nn
+
+# A single linear layer: 4 inputs → 8 neurons
+layer = nn.Linear(in_features=4, out_features=8)
+
+x = torch.randn(1, 4)        # batch of 1, 4 features
+out = torch.relu(layer(x))   # shape: (1, 8)
+print(out.shape)              # torch.Size([1, 8])
+```
+
+Stacking layers gives you a **Multi-Layer Perceptron (MLP)** — the most fundamental neural network architecture.
+
+## Building a Neural Network in PyTorch
+
+Let's build a classifier for the classic Iris dataset (3 flower species, 4 features):
+
+```python
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+import numpy as np
+
+# ── Data ──────────────────────────────────────────────────────────
+iris = load_iris()
+X, y = iris.data, iris.target
+
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+
+X_train, X_val, y_train, y_val = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+# Convert to PyTorch tensors
+X_train = torch.FloatTensor(X_train)
+X_val   = torch.FloatTensor(X_val)
+y_train = torch.LongTensor(y_train)
+y_val   = torch.LongTensor(y_val)
+
+# ── Model ─────────────────────────────────────────────────────────
+class IrisNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(4, 16),
+            nn.ReLU(),
+            nn.Linear(16, 16),
+            nn.ReLU(),
+            nn.Linear(16, 3),   # 3 classes
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+model = IrisNet()
+```
+
+## Loss Functions and Optimisers
+
+**Loss functions** measure how wrong the model is. For multi-class classification we use Cross-Entropy Loss, which compares the model's predicted probability distribution against the true label.
+
+**Optimisers** use the gradients of the loss to update weights. Adam is the standard choice — it adapts the learning rate per parameter and generally converges faster than plain SGD.
+
+```python
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=1e-3)
+```
+
+## Training Loop — The Heart of Deep Learning
+
+```python
+def train(model, X_train, y_train, X_val, y_val, epochs=200):
+    for epoch in range(1, epochs + 1):
+        # ── Training step ─────────────────────────────────────────
+        model.train()
+        optimizer.zero_grad()          # clear accumulated gradients
+        logits = model(X_train)        # forward pass
+        loss = criterion(logits, y_train)
+        loss.backward()                # backpropagation
+        optimizer.step()               # weight update
+
+        # ── Validation step ───────────────────────────────────────
+        if epoch % 20 == 0:
+            model.eval()
+            with torch.no_grad():
+                val_logits = model(X_val)
+                val_loss = criterion(val_logits, y_val)
+                preds = val_logits.argmax(dim=1)
+                acc = (preds == y_val).float().mean().item()
+            print(f"Epoch {epoch:3d}  train_loss={loss.item():.4f}  "
+                  f"val_loss={val_loss.item():.4f}  val_acc={acc:.4f}")
+
+train(model, X_train, y_train, X_val, y_val)
+# Epoch  20  train_loss=0.8142  val_loss=0.7891  val_acc=0.7667
+# Epoch 100  train_loss=0.1823  val_loss=0.2104  val_acc=0.9667
+# Epoch 200  train_loss=0.0741  val_loss=0.1102  val_acc=0.9667
+```
+
+## What is Backpropagation, Really?
+
+Backpropagation is just the **chain rule of calculus** applied to a computational graph. When you call `loss.backward()`, PyTorch automatically computes the gradient of the loss with respect to every learnable parameter by working backwards through the network. Each weight is updated proportionally to how much it contributed to the error.
+
+The intuition: if weight `w₃` caused a big increase in loss, it gets nudged down by a larger amount. Weights that barely affected the loss are barely changed.
+
+## Common Problems and How to Spot Them
+
+### Overfitting
+Training loss keeps dropping but validation loss starts rising. Fix: add **Dropout** layers (`nn.Dropout(p=0.3)`) or **L2 regularisation** (`weight_decay=1e-4` in the optimiser).
+
+### Underfitting
+Both losses stay high. Fix: add more layers/neurons, train longer, or lower the learning rate.
+
+### Exploding Gradients
+Loss becomes `nan` early in training. Fix: add **gradient clipping** (`torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)`) or reduce the learning rate.
+
+## The Role of Depth vs Width
+
+- **Width** (more neurons per layer): captures more features at the same abstraction level
+- **Depth** (more layers): enables the network to learn hierarchical representations — early layers learn simple patterns, later layers combine them into complex concepts
+
+For most tabular data (like Iris), 2–3 layers with 16–128 neurons is plenty. For images and text, depth matters much more.
+
+## Where to Go From Here
+
+You now understand the core building blocks: neurons, layers, activations, loss functions, backprop, and the training loop. Every state-of-the-art model — ResNets, Transformers, diffusion models — is built from these same ingredients, just arranged more cleverly.
+
+Next steps:
+1. Apply this to your own dataset (pick one from Kaggle)
+2. Add Dropout and batch normalisation and observe the difference
+3. Read about **Convolutional Neural Networks** for image tasks — the subject of my [Getting Started with Computer Vision Using PyTorch](/blog/getting-started-computer-vision-pytorch) post
+
+The best way to learn is to write the code yourself, break things, and read the error messages carefully. PyTorch's error messages are surprisingly helpful once you know what to look for.

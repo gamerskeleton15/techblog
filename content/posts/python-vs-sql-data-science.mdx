@@ -1,0 +1,196 @@
+---
+title: 'Python vs SQL: When to Use Each in Data Science Projects'
+description: 'A practical guide to knowing when to reach for Python and when SQL is the better tool — with real examples from data science workflows.'
+date: '2026-06-12'
+author: 'Abdul Ahad'
+category: 'Programming'
+tags: ['python', 'sql', 'data-science', 'databases', 'pandas']
+coverImage: '/images/programming-languages-2024.svg'
+slug: 'python-vs-sql-data-science'
+---
+
+One of the most common questions I had when starting out in data science was: "Should I be doing this in Python or SQL?" After spending real time with both, I can tell you: it's the wrong question. The right question is "which tool fits this step of the pipeline?" In practice, the best data scientists are fluent in both and know exactly where the boundary sits.
+
+## Start With the Mental Model
+
+Think of it this way:
+
+- **SQL** lives closest to the data. It's declarative — you describe *what* you want, not *how* to get it.
+- **Python** lives in your analysis environment. It's imperative — you write the steps explicitly.
+
+SQL is phenomenally good at set operations on structured, tabular data stored in a database. Python is phenomenally good at everything that comes after you've pulled that data out — modelling, visualisation, statistical testing, automation.
+
+## Where SQL Wins
+
+### 1. Querying and Filtering at Scale
+
+If your dataset lives in PostgreSQL, BigQuery, Snowflake, or any other database and has millions of rows, do your filtering *there*, not in Python. The database engine is purpose-built for this — it uses indexes, query planners, and parallel execution that Pandas simply can't match.
+
+```sql
+-- This runs on the database server — no data transfer until you need it
+SELECT
+    customer_id,
+    SUM(order_total) AS lifetime_value,
+    COUNT(*)         AS order_count
+FROM orders
+WHERE created_at >= '2026-01-01'
+  AND status = 'completed'
+GROUP BY customer_id
+HAVING COUNT(*) >= 3
+ORDER BY lifetime_value DESC
+LIMIT 1000;
+```
+
+Pulling all rows into Python and doing this with Pandas would be unnecessarily slow and memory-hungry.
+
+### 2. Joins Across Multiple Tables
+
+SQL's raison d'être is joining relational tables. A three-table join that would take 20 lines of Pandas merge operations is clean and readable in SQL:
+
+```sql
+SELECT
+    u.name,
+    u.email,
+    COUNT(o.id)      AS total_orders,
+    SUM(p.amount)    AS total_payments
+FROM users u
+JOIN orders o   ON o.user_id = u.id
+JOIN payments p ON p.order_id = o.id
+WHERE u.country = 'PK'
+GROUP BY u.id, u.name, u.email;
+```
+
+### 3. Exploratory Data Profiling
+
+Before writing a single line of Python, I profile unfamiliar data in SQL:
+
+```sql
+-- Quick null / distinct / min-max profile
+SELECT
+    COUNT(*)                    AS total_rows,
+    COUNT(age)                  AS age_non_null,
+    COUNT(DISTINCT city)        AS unique_cities,
+    MIN(signup_date)            AS earliest_signup,
+    MAX(signup_date)            AS latest_signup
+FROM users;
+```
+
+This gives me an instant health check on the table before I commit to loading it.
+
+### 4. Data Transformation in ETL Pipelines
+
+If you're building data pipelines (with dbt, Airflow + SQL operators, or plain stored procedures), SQL transformations are far easier to version-control, audit, and run incrementally than equivalent Python scripts.
+
+## Where Python Wins
+
+### 1. Machine Learning
+
+Full stop — this is Python's domain. Scikit-learn, PyTorch, TensorFlow, XGBoost, Hugging Face: none of these have SQL equivalents.
+
+```python
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.model_selection import cross_val_score
+
+model = GradientBoostingClassifier(n_estimators=300, learning_rate=0.05)
+scores = cross_val_score(model, X, y, cv=5, scoring='roc_auc')
+print(f"AUC: {scores.mean():.4f} ± {scores.std():.4f}")
+```
+
+### 2. Statistical Analysis
+
+Hypothesis testing, confidence intervals, bootstrapping — these all live in Python (SciPy, statsmodels, pingouin).
+
+```python
+from scipy import stats
+
+# Two-sample t-test: does Group A have higher spend than Group B?
+t_stat, p_value = stats.ttest_ind(group_a_spend, group_b_spend)
+print(f"t={t_stat:.3f}, p={p_value:.4f}")
+# p < 0.05 → statistically significant difference
+```
+
+### 3. Visualisation
+
+Matplotlib, Seaborn, Plotly — Python has a rich visualisation ecosystem. SQL has almost nothing here.
+
+```python
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+sns.histplot(df['age'], bins=30, kde=True)
+plt.title('Age Distribution of Customers')
+plt.savefig('age_dist.png', dpi=150, bbox_inches='tight')
+```
+
+### 4. Complex, Row-by-Row Logic
+
+Some transformations are genuinely awkward in SQL — sliding window calculations, recursive structures, text parsing, anything that requires conditionals more complex than `CASE WHEN`. Python handles these naturally:
+
+```python
+def classify_customer(row):
+    if row['days_since_last_order'] > 180:
+        return 'churned'
+    elif row['order_count'] >= 10:
+        return 'loyal'
+    else:
+        return 'active'
+
+df['segment'] = df.apply(classify_customer, axis=1)
+```
+
+### 5. Automation and Scripting
+
+Scheduled jobs, API calls, email reports, file processing — Python owns the automation layer.
+
+## The Handoff Pattern
+
+In real projects, SQL and Python work together. Here's the typical handoff:
+
+```
+Database → [SQL: filter, join, aggregate] → Pandas DataFrame → [Python: model, visualise, report]
+```
+
+In code:
+
+```python
+import pandas as pd
+import psycopg2   # or sqlalchemy, or your driver of choice
+
+query = """
+    SELECT customer_id, age, total_spend, churn_flag
+    FROM customer_features
+    WHERE cohort_year = 2026
+"""
+
+df = pd.read_sql(query, con=connection)
+
+# From here: Python all the way
+from sklearn.linear_model import LogisticRegression
+model = LogisticRegression()
+model.fit(df[['age', 'total_spend']], df['churn_flag'])
+```
+
+The SQL does the heavy lifting in the database; Python gets a clean, pre-aggregated DataFrame to work with.
+
+## Rules of Thumb
+
+| Task | Use |
+|------|-----|
+| Filter rows, join tables | **SQL** |
+| Group by + aggregate | **SQL** (unless already in Pandas) |
+| Complex text parsing | **Python** |
+| Machine learning | **Python** |
+| Statistical tests | **Python** |
+| Visualisation | **Python** |
+| ETL / data pipelines | **SQL** (dbt) or **Python** (Airflow) — depends on team |
+| Quick table profiling | **SQL** |
+
+## Learning Both Pays Off
+
+Job postings for data scientists and ML engineers almost always list both SQL and Python. The good news: SQL has a small surface area to learn (a few weeks to become productive), while Python for data science is a longer journey. Start with SQL first — `SELECT`, `WHERE`, `GROUP BY`, `JOIN`, and window functions (`ROW_NUMBER`, `LAG`, `SUM OVER`) will cover 90 % of what you need.
+
+For the Python side, check out [Getting Started with Artificial Intelligence](/blog/getting-started-with-ai) and [Top 5 Machine Learning Projects for Beginners](/blog/machine-learning-projects) for practical starting points.
+
+## Conclusion
+
+Python and SQL aren't competitors — they're teammates. Know SQL well enough to keep heavy computation in the database and deliver clean data to Python. Know Python well enough to build models, run tests, and tell stories with data. Together, they cover the full data science workflow from raw tables to deployed model.

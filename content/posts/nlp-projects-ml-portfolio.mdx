@@ -1,0 +1,285 @@
+---
+title: '5 NLP Projects That Will Strengthen Your ML Portfolio'
+description: 'Five natural language processing projects — from sentiment analysis to question answering — that demonstrate real ML engineering skills to employers and collaborators.'
+date: '2026-09-09'
+author: 'Abdul Ahad'
+category: 'Machine Learning'
+tags: ['nlp', 'natural-language-processing', 'python', 'transformers', 'hugging-face', 'portfolio']
+coverImage: '/images/ai-getting-started.svg'
+slug: 'nlp-projects-ml-portfolio'
+---
+
+Natural Language Processing is one of the hottest areas in machine learning right now, and for good reason — language is how humans organise and communicate knowledge, and models that understand text unlock enormous practical value. Building NLP projects is also one of the fastest ways to make your portfolio stand out, because the results are immediately tangible: you can show someone a working sentiment analyser or chatbot far more easily than you can explain a housing price model.
+
+Here are five NLP projects ordered from beginner-friendly to genuinely challenging, each with clear implementation guidance and real technical depth.
+
+## Project 1: Sentiment Analyser for Twitter / Social Media
+
+**Difficulty:** Beginner | **Skills:** Text preprocessing, TF-IDF, Logistic Regression, Hugging Face
+
+### Why Build It?
+Sentiment analysis is the "hello world" of NLP. Every company with a social media presence wants to know whether people are saying positive or negative things about them. It's also the best project for learning the full text-to-prediction pipeline.
+
+### Implementation Path
+
+**Classical approach (start here):**
+
+```python
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
+import re
+
+def clean_text(text):
+    text = re.sub(r'http\S+', '', text)           # remove URLs
+    text = re.sub(r'@\w+', '', text)              # remove mentions
+    text = re.sub(r'[^a-zA-Z\s]', '', text)       # remove punctuation
+    return text.lower().strip()
+
+# Load the Twitter Sentiment140 dataset (1.6M tweets from Kaggle)
+df = pd.read_csv('training.1600000.processed.noemoticon.csv',
+                 encoding='latin-1', header=None,
+                 names=['sentiment','id','date','query','user','text'])
+df['sentiment'] = df['sentiment'].map({0: 'negative', 4: 'positive'})
+df['clean'] = df['text'].apply(clean_text)
+
+X_train, X_test, y_train, y_test = train_test_split(
+    df['clean'], df['sentiment'], test_size=0.2, random_state=42
+)
+vectorizer = TfidfVectorizer(max_features=50_000, ngram_range=(1, 2))
+X_train_vec = vectorizer.fit_transform(X_train)
+X_test_vec  = vectorizer.transform(X_test)
+
+model = LogisticRegression(max_iter=500)
+model.fit(X_train_vec, y_train)
+print(classification_report(y_test, model.predict(X_test_vec)))
+```
+
+**Transformer upgrade (once classical works):**
+
+```python
+from transformers import pipeline
+
+sentiment_pipe = pipeline('sentiment-analysis',
+                           model='cardiffnlp/twitter-roberta-base-sentiment')
+result = sentiment_pipe("This product completely exceeded my expectations!")
+print(result)  # [{'label': 'LABEL_2', 'score': 0.98}]  ← positive
+```
+
+### Portfolio Value
+Deploy it as a simple web app. Accept a URL or hashtag, fetch recent tweets, show a real-time sentiment breakdown. It's impressive, shareable, and proves you can build end-to-end.
+
+---
+
+## Project 2: Named Entity Recognition (NER) for News Articles
+
+**Difficulty:** Beginner–Intermediate | **Skills:** spaCy, token classification, annotation
+
+### Why Build It?
+NER extracts structured information (people, organisations, locations, dates) from unstructured text. It's the backbone of information extraction pipelines used in finance, law, journalism, and intelligence.
+
+### Implementation Path
+
+```python
+import spacy
+
+# Load the pre-trained English model
+nlp = spacy.load('en_core_web_trf')  # transformer-based, most accurate
+
+article = """
+    Apple CEO Tim Cook announced on Monday that the company will open a new
+    research centre in Lahore, Pakistan by Q3 2027, investing $500 million.
+"""
+
+doc = nlp(article)
+for ent in doc.ents:
+    print(f"{ent.text:30s} → {ent.label_:10s} ({spacy.explain(ent.label_)})")
+
+# Apple                          → ORG        (Companies, agencies, institutions)
+# Tim Cook                       → PERSON     (People, incl. fictional)
+# Monday                         → DATE       (Absolute or relative dates or periods)
+# Lahore                         → GPE        (Countries, cities, states)
+# Pakistan                       → GPE
+# Q3 2027                        → DATE
+# $500 million                   → MONEY      (Monetary values)
+```
+
+**Fine-tuning on domain-specific data:**
+
+If the out-of-the-box model misses entities in your domain (medical records, legal documents), fine-tune it with spaCy's training pipeline on a few hundred annotated examples. The annotation tool [Label Studio](https://labelstud.io) makes this manageable as a solo project.
+
+### Portfolio Extension
+Build a pipeline that reads BBC/Reuters RSS feeds, extracts entities, and stores them in a database with frequency counts. Show a dashboard of the most-mentioned companies or people this week.
+
+---
+
+## Project 3: Text Summarisation with Transformers
+
+**Difficulty:** Intermediate | **Skills:** Hugging Face, BART/T5, evaluation metrics (ROUGE)
+
+### Why Build It?
+Automatic summarisation is in heavy production use — legal document review, news aggregation, meeting transcription tools. Implementing it teaches you sequence-to-sequence models, tokenisation limits, and how to evaluate generative output.
+
+### Implementation Path
+
+```python
+from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
+
+# Zero-shot summarisation with facebook/bart-large-cnn
+summarizer = pipeline('summarization', model='facebook/bart-large-cnn')
+
+long_article = """
+    The James Webb Space Telescope has captured unprecedented images of the
+    Crab Nebula, a supernova remnant located 6,500 light-years away in the
+    constellation Taurus. The new observations, released by NASA on Tuesday,
+    reveal intricate filaments of gas and dust with a level of detail that
+    ground-based telescopes cannot achieve. Scientists believe the images will
+    help them understand the complex physics of stellar explosions and the
+    subsequent evolution of neutron stars. The Crab Nebula is the remnant of
+    a supernova observed in 1054 AD by Chinese and Arab astronomers.
+    [... imagine 2,000 more words here ...]
+"""
+
+summary = summarizer(long_article, max_length=80, min_length=30,
+                      do_sample=False)
+print(summary[0]['summary_text'])
+```
+
+**Evaluate with ROUGE:**
+
+```python
+from rouge_score import rouge_scorer
+
+scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'])
+results = scorer.score(reference_summary, generated_summary)
+print(f"ROUGE-1: {results['rouge1'].fmeasure:.4f}")
+print(f"ROUGE-L: {results['rougeL'].fmeasure:.4f}")
+```
+
+ROUGE measures overlap between your generated summary and a reference (human-written) summary. A ROUGE-L above 0.4 is generally considered good for news summarisation.
+
+---
+
+## Project 4: Question Answering System
+
+**Difficulty:** Intermediate–Advanced | **Skills:** Retrieval-Augmented Generation (RAG), Extractive QA, vector databases
+
+### Why Build It?
+Q&A systems are one of the most commercially relevant NLP applications — customer support bots, document search, knowledge bases. Building one demonstrates understanding of both retrieval and language model inference.
+
+### Extractive QA (Answering From a Given Passage)
+
+```python
+from transformers import pipeline
+
+qa_pipe = pipeline('question-answering',
+                   model='deepset/roberta-base-squad2')
+
+context = """
+    PyTorch is an open source machine learning framework developed by
+    Meta AI. It was released in 2016 and is known for its dynamic
+    computation graph, which makes debugging easier compared to static
+    graph frameworks. PyTorch uses Python as its primary interface.
+"""
+
+result = qa_pipe(question="Who developed PyTorch?", context=context)
+print(result)
+# {'score': 0.9921, 'start': 62, 'answer': 'Meta AI'}
+```
+
+### Open-Domain QA with RAG
+
+For answering questions over a large document collection (e.g., "your company's docs"), the pattern is:
+1. Embed all documents with a sentence-transformer model
+2. Store embeddings in a vector DB (FAISS, Chroma, Pinecone)
+3. At query time: embed the question, retrieve top-k similar chunks, feed them as context to the LLM
+
+```python
+from sentence_transformers import SentenceTransformer
+import faiss, numpy as np
+
+encoder = SentenceTransformer('all-MiniLM-L6-v2')
+docs = ["PyTorch is developed by Meta AI.", "scikit-learn works with NumPy arrays.", ...]
+
+embeddings = encoder.encode(docs, convert_to_numpy=True)
+index = faiss.IndexFlatL2(embeddings.shape[1])
+index.add(embeddings)
+
+query_vec = encoder.encode(["Who makes PyTorch?"], convert_to_numpy=True)
+distances, indices = index.search(query_vec, k=3)
+retrieved = [docs[i] for i in indices[0]]
+print(retrieved)  # ['PyTorch is developed by Meta AI.', ...]
+```
+
+---
+
+## Project 5: Fine-Tuning a Text Classifier With Hugging Face
+
+**Difficulty:** Advanced | **Skills:** Transformer fine-tuning, PyTorch training loop, evaluation, model saving
+
+### Why Build It?
+Using a pre-trained model off the shelf is one skill. Fine-tuning one on your own labelled data is a fundamentally different and more valuable skill. This project closes the loop between "using transformers" and "understanding how they're trained."
+
+```python
+from datasets import Dataset
+from transformers import (AutoTokenizer, AutoModelForSequenceClassification,
+                          TrainingArguments, Trainer)
+import torch, numpy as np
+from sklearn.metrics import accuracy_score, f1_score
+
+# Example: toxic comment classification
+texts  = ["Great article!", "You're an idiot", ...]
+labels = [0, 1, ...]  # 0=clean, 1=toxic
+
+dataset = Dataset.from_dict({'text': texts, 'label': labels})
+dataset = dataset.train_test_split(test_size=0.2)
+
+model_name = 'distilbert-base-uncased'
+tokenizer  = AutoTokenizer.from_pretrained(model_name)
+
+def tokenize(batch):
+    return tokenizer(batch['text'], truncation=True, padding='max_length',
+                     max_length=128)
+
+tokenized = dataset.map(tokenize, batched=True)
+model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
+
+def compute_metrics(eval_pred):
+    logits, labels = eval_pred
+    preds = np.argmax(logits, axis=-1)
+    return {'accuracy': accuracy_score(labels, preds),
+            'f1': f1_score(labels, preds)}
+
+args = TrainingArguments(
+    output_dir='./toxic-classifier',
+    num_train_epochs=3,
+    per_device_train_batch_size=16,
+    evaluation_strategy='epoch',
+    save_strategy='epoch',
+    load_best_model_at_end=True,
+)
+
+trainer = Trainer(model=model, args=args,
+                  train_dataset=tokenized['train'],
+                  eval_dataset=tokenized['test'],
+                  compute_metrics=compute_metrics)
+trainer.train()
+```
+
+After fine-tuning, push the model to Hugging Face Hub with `trainer.push_to_hub("your-username/toxic-classifier")` — now it's publicly usable and it's on your profile.
+
+---
+
+## Putting It All Together
+
+Employers in ML roles — data scientists, ML engineers, NLP engineers — want to see that you can:
+1. Handle raw text data (cleaning, tokenisation)
+2. Choose appropriate models (classical vs. transformer)
+3. Evaluate correctly (not just accuracy — F1, ROUGE, BLEU where appropriate)
+4. Deploy or share results
+
+Building these five projects gets you to all four. Start with Project 1 (the full pipeline, simple enough to finish in a weekend) and work upward. By Project 5 you'll have genuine fine-tuning experience that most bootcamp graduates lack.
+
+For the PyTorch fundamentals beneath these transformer models, see [Understanding Neural Networks: A Practical Introduction](/blog/understanding-neural-networks). For broader ML project ideas beyond NLP, check out [Top 5 Machine Learning Projects for Beginners](/blog/machine-learning-projects).
