@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { getSortedPostsData, PostData } from '@/lib/posts';
 import NewsletterForm from '@/components/NewsletterForm';
+import AdSlot from '@/components/AdSlot';
 
 export const metadata: Metadata = {
   title: 'TechBlog - Latest Technology News, AI Tutorials & Programming Guides',
@@ -138,6 +139,13 @@ export default async function Home() {
               View All Articles
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* AdSense Slot */}
+      <section className="py-8 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <AdSlot className="my-4" />
         </div>
       </section>
 

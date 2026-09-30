@@ -69,7 +69,7 @@ export default function Navbar({ user }: { user?: User | null }) {
                   Privacy Policy
                 </Link>
                 <Link
-                  href="/terms-of-service"
+                  href="/terms"
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                 >
                   Terms of Service
@@ -215,7 +215,7 @@ export default function Navbar({ user }: { user?: User | null }) {
               Privacy Policy
             </Link>
             <Link
-              href="/terms-of-service"
+              href="/terms"
               className="block px-4 py-3 text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
               onClick={() => setIsMobileMenuOpen(false)}
             >

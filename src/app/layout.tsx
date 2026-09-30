@@ -8,6 +8,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const syne = Syne({ subsets: ['latin'], weight: ['700', '800'], variable: '--font-syne' });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://techblog-example.com'),
   title: 'Tech Blog - Latest Technology News & Tutorials',
   description: 'A modern tech blog covering AI, programming, gadgets, and industry news with in-depth tutorials and reviews.',
   icons: {
