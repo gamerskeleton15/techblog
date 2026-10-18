@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter, Syne } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
 import NavbarContainer from '@/components/NavbarContainer';
 import Footer from '@/components/Footer';
 
@@ -29,6 +30,7 @@ export default function RootLayout({
         <NavbarContainer />
         <main className="min-h-screen pb-16">{children}</main>
         <Footer />
+        <Analytics />
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3517858716332831"
