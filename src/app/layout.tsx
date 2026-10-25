@@ -7,7 +7,7 @@ import Script from 'next/script';
 
 // In the <head> section:
  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3517858716332831"
-     crossorigin="anonymous"></script>
+      crossorigin="anonymous"></script>
 
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-RTZMZ4VEPD"></script>
@@ -22,7 +22,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const syne = Syne({ subsets: ['latin'], weight: ['700', '800'], variable: '--font-syne' });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://techblog-example.com'),
+  metadataBase: new URL('https://techblog-six-gamma.vercel.app'),
   title: 'Tech Blog - Latest Technology News & Tutorials',
   description: 'A modern tech blog covering AI, programming, gadgets, and industry news with in-depth tutorials and reviews.',
   icons: {

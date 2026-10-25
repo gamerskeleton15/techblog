@@ -2,4 +2,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://techblog.example.com/sitemap.xml
+Sitemap: https://techblog-six-gamma.vercel.app/sitemap.xml
