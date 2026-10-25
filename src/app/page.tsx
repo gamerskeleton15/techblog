@@ -1,276 +1,198 @@
-import Link from 'next/link';
-import type { Metadata } from 'next';
-import { getSortedPostsData, PostData } from '@/lib/posts';
-import NewsletterForm from '@/components/NewsletterForm';
-import AdSlot from '@/components/AdSlot';
+@import "tailwindcss";
 
-export const metadata: Metadata = {
-  title: 'TechBlog - Latest Technology News, AI Tutorials & Programming Guides',
-  description:
-    'Your trusted source for the latest technology news, in-depth AI and machine learning tutorials, honest gadget reviews, and insightful industry analysis.',
-  openGraph: {
-    title: 'TechBlog - Latest Technology News, AI Tutorials & Programming Guides',
-    description:
-      'Your trusted source for the latest technology news, in-depth AI and machine learning tutorials, honest gadget reviews, and insightful industry analysis.',
-    type: 'website',
-    siteName: 'TechBlog',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'TechBlog - Latest Technology News & Tutorials',
-    description:
-      'In-depth AI tutorials, programming guides, gadget reviews, and tech industry analysis.',
-  },
-};
+:root {
+  --background: #fdfdfd;
+  --foreground: #171717;
+  --code-bg: #1e1e1e;
+  --code-fg: #d4d4d4;
+  --code-border: #333333;
+}
 
-export default async function Home() {
-  const allPosts = await getSortedPostsData();
-  const featuredPosts = allPosts.slice(0, 3); // Show first 3 posts as featured
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-geist-mono);
+  --font-syne: var(--font-syne);
+}
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-            TechBlog
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
-            Your trusted source for the latest technology news, in-depth programming tutorials,
-            honest gadget reviews, and insightful industry analysis.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link
-              href="/blog"
-              className="
-                bg-white text-blue-600 hover:bg-gray-100 font-semibold
-                py-3 px-8 rounded-full transition-colors duration-200
-                inline-flex items-center justify-center
-              "
-            >
-              Explore Our Blog
-            </Link>
-            <Link
-              href="/about"
-              className="
-                border-2 border-white text-white hover:bg-white hover:text-blue-600
-                font-semibold py-3 px-8 rounded-full transition-colors duration-200
-                inline-flex items-center justify-center
-              "
-            >
-              Learn About Us
-            </Link>
-          </div>
-        </div>
-      </section>
+* {
+  box-sizing: border-box;
+}
 
-      {/* Featured Posts Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Featured Articles
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Discover our most popular and recent tech insights
-            </p>
-          </div>
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  max-width: 100%;
+}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredPosts.map((post: PostData) => (
-              <article
-                key={post.id}
-                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
-              >
-                {post.coverImage && (
-                  <div className="h-48 bg-gray-200">
-                    <img
-                      src={post.coverImage}
-                      alt={post.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-                <div className="p-6">
-                  <div className="flex items-center mb-2">
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                      {post.category}
-                    </span>
-                    <span className="ml-2 text-sm text-gray-500">
-                      {new Date(post.date).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    <Link
-                      href={`/blog/${post.slug}`}
-                      className="hover:text-blue-600 transition-colors duration-200"
-                    >
-                      {post.title}
-                    </Link>
-                  </h3>
-                  <p className="text-gray-600 mb-4 line-clamp-3">
-                    {post.description}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500">
-                      By {post.author}
-                    </span>
-                    <Link
-                      href={`/blog/${post.slug}`}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                    >
-                      Read more →
-                    </Link>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter);
+  line-height: 1.6;
+}
 
-          <div className="text-center mt-10">
-            <Link
-              href="/blog"
-              className="
-                bg-blue-600 hover:bg-blue-700 text-white font-medium
-                py-3 px-8 rounded-full transition-colors duration-200
-                inline-flex items-center justify-center
-              "
-            >
-              View All Articles
-            </Link>
-          </div>
-        </div>
-      </section>
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
 
-      {/* AdSense Slot */}
-      <section className="py-8 px-4 sm:px-6 lg:px-8 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <AdSlot className="my-4" />
-        </div>
-      </section>
+/* Custom typography & markdown prose styling for blog posts */
+@layer utilities {
+  .prose {
+    color: #374151;
+    max-width: 65ch;
+  }
+  .prose h1, .prose h2, .prose h3, .prose h4 {
+    color: #111827;
+    font-weight: 700;
+    margin-top: 2em;
+    margin-bottom: 1em;
+    font-family: var(--font-syne);
+    line-height: 1.3;
+  }
+  .prose h1 { font-size: 2.25em; }
+  .prose h2 { font-size: 1.5em; }
+  .prose h3 { font-size: 1.25em; }
+  .prose p {
+    margin-top: 1.25em;
+    margin-bottom: 1.25em;
+  }
+  .prose a {
+    color: #2563eb;
+    text-decoration: underline;
+    text-decoration-color: #93c5fd;
+    text-underline-offset: 4px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  .prose a:hover {
+    color: #1d4ed8;
+    text-decoration-color: #2563eb;
+  }
+  .prose strong {
+    color: #111827;
+    font-weight: 600;
+  }
 
-      {/* Categories Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Explore Topics
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Find articles on the topics that matter most to you
-            </p>
-          </div>
+  /* Blockquote styling */
+  .prose blockquote {
+    font-weight: 500;
+    font-style: italic;
+    color: #4b5563;
+    border-left-width: 4px;
+    border-left-color: #3b82f6;
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+    padding-left: 1em;
+    background-color: #eff6ff;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    padding-right: 1em;
+    border-top-right-radius: 0.375rem;
+    border-bottom-right-radius: 0.375rem;
+  }
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white">
-              <h3 className="text-xl font-bold mb-2">Artificial Intelligence</h3>
-              <p className="text-blue-100 mb-4">
-                Explore the latest in AI, machine learning, and deep learning
-              </p>
-              <Link
-                href="/blog?category=AI"
-                className="inline-block bg-white/20 hover:bg-white/30 text-white font-medium py-2 px-4 rounded transition-colors"
-              >
-                Browse AI Articles
-              </Link>
-            </div>
+  /* Inline code snippet formatting */
+  .prose code {
+    color: #0f172a;
+    font-weight: 600;
+    font-size: 0.875em;
+    background-color: #f1f5f9;
+    padding: 0.2em 0.4em;
+    border-radius: 0.25rem;
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
+  }
 
-            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-6 text-white">
-              <h3 className="text-xl font-bold mb-2">Programming</h3>
-              <p className="text-green-100 mb-4">
-                Tutorials, best practices, and insights for developers
-              </p>
-              <Link
-                href="/blog?category=Programming"
-                className="inline-block bg-white/20 hover:bg-white/30 text-white font-medium py-2 px-4 rounded transition-colors"
-              >
-                Browse Programming
-              </Link>
-            </div>
+  /* Code blocks styles for markdown <pre> tags (often wrapped around <code>) */
+  .prose pre {
+    background-color: var(--code-bg);
+    color: var(--code-fg);
+    overflow-x: auto;
+    font-size: 0.875em;
+    line-height: 1.7142857;
+    margin-top: 1.7142857em;
+    margin-bottom: 1.7142857em;
+    border-radius: 0.5rem;
+    padding: 1.5em;
+    border: 1px solid var(--code-border);
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+  }
+  .prose pre code {
+    background-color: transparent;
+    border-width: 0;
+    border-radius: 0;
+    padding: 0;
+    font-weight: 400;
+    color: inherit;
+    font-size: inherit;
+    font-family: inherit;
+    line-height: inherit;
+  }
 
-            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-6 text-white">
-              <h3 className="text-xl font-bold mb-2">Gadgets</h3>
-              <p className="text-purple-100 mb-4">
-                In-depth reviews of the latest smartphones, laptops, and tech
-              </p>
-              <Link
-                href="/blog?category=Gadgets"
-                className="inline-block bg-white/20 hover:bg-white/30 text-white font-medium py-2 px-4 rounded transition-colors"
-              >
-                Browse Gadgets
-              </Link>
-            </div>
+  /* Tables */
+  .prose table {
+    width: 100%;
+    table-layout: auto;
+    text-align: left;
+    margin-top: 2em;
+    margin-bottom: 2em;
+    font-size: 0.875em;
+    line-height: 1.7142857;
+  }
+  .prose thead {
+    color: #111827;
+    font-weight: 600;
+    border-bottom-width: 1px;
+    border-bottom-color: #d1d5db;
+  }
+  .prose thead th {
+    vertical-align: bottom;
+    padding-right: 0.5714286em;
+    padding-bottom: 0.5714286em;
+    padding-left: 0.5714286em;
+  }
+  .prose tbody tr {
+    border-bottom-width: 1px;
+    border-bottom-color: #e5e7eb;
+  }
+  .prose tbody td {
+    vertical-align: top;
+    padding-top: 0.5714286em;
+    padding-right: 0.5714286em;
+    padding-bottom: 0.5714286em;
+    padding-left: 0.5714286em;
+  }
 
-            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg p-6 text-white">
-              <h3 className="text-xl font-bold mb-2">Industry News</h3>
-              <p className="text-orange-100 mb-4">
-                Breaking news and analysis from the world of technology
-              </p>
-              <Link
-                href="/blog?category=News"
-                className="inline-block bg-white/20 hover:bg-white/30 text-white font-medium py-2 px-4 rounded transition-colors"
-              >
-                Browse News
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+  /* Responsive images */
+  .prose img {
+    margin-top: 2em;
+    margin-bottom: 2em;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
 
-      {/* Newsletter Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Stay Updated
-          </h2>
-          <p className="text-lg text-gray-600 mb-8">
-            Subscribe to our newsletter for the latest tech insights and tutorials
-          </p>
-
-          <div className="max-w-md mx-auto">
-            <NewsletterForm />
-          </div>
-
-          <p className="text-sm text-gray-500 mt-4">
-            We respect your privacy. Unsubscribe at any time.
-          </p>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-blue-600">
-        <div className="max-w-4xl mx-auto text-center text-white">
-          <h2 className="text-3xl font-bold mb-4">
-            Ready to Dive Deeper?
-          </h2>
-          <p className="text-xl mb-8">
-            Join thousands of tech enthusiasts who read our articles daily
-          </p>
-
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link
-              href="/contact"
-              className="
-                bg-white text-blue-600 hover:bg-gray-100 font-semibold
-                py-3 px-8 rounded-full transition-colors duration-200
-                inline-flex items-center justify-center
-              "
-            >
-              Get In Touch
-            </Link>
-            <Link
-              href="/blog"
-              className="
-                border-2 border-white text-white hover:bg-white hover:text-blue-600
-                font-semibold py-3 px-8 rounded-full transition-colors duration-200
-                inline-flex items-center justify-center
-              "
-            >
-              Start Reading
-            </Link>
-          </div>
-        </div>
-      </section>
-    </div>
-  );
+  /* Lists */
+  .prose ul, .prose ol {
+    margin-top: 1.25em;
+    margin-bottom: 1.25em;
+    padding-left: 1.625em;
+  }
+  .prose ul {
+    list-style-type: disc;
+  }
+  .prose ol {
+    list-style-type: decimal;
+  }
+  .prose li {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+  }
 }
