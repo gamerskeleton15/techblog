@@ -1,198 +1,209 @@
-@import "tailwindcss";
+import Link from 'next/link';
+import Image from 'next/image';
+import type { Metadata } from 'next';
+import { getSortedPostsData, PostData } from '@/lib/posts';
+import NewsletterForm from '@/components/NewsletterForm';
+import AdSlot from '@/components/AdSlot';
 
-:root {
-  --background: #fdfdfd;
-  --foreground: #171717;
-  --code-bg: #1e1e1e;
-  --code-fg: #d4d4d4;
-  --code-border: #333333;
-}
+export const metadata: Metadata = {
+  title: 'TechBlog - Latest Technology News, AI Tutorials & Programming Guides',
+  description:
+    'Your trusted source for the latest technology news, in-depth AI and machine learning tutorials, honest gadget reviews, and insightful industry analysis.',
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'TechBlog - Latest Technology News, AI Tutorials & Programming Guides',
+    description:
+      'Your trusted source for the latest technology news, in-depth AI and machine learning tutorials, honest gadget reviews, and insightful industry analysis.',
+    type: 'website',
+    siteName: 'TechBlog',
+    url: 'https://techblog-six-gamma.vercel.app',
+    images: [{ url: '/logo.svg', width: 1200, height: 630, alt: 'TechBlog' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'TechBlog - Latest Technology News & Tutorials',
+    description:
+      'In-depth AI tutorials, programming guides, gadget reviews, and tech industry analysis.',
+    images: ['/logo.svg'],
+  },
+};
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
-  --font-mono: var(--font-geist-mono);
-  --font-syne: var(--font-syne);
-}
+export default async function Home() {
+  const allPosts = await getSortedPostsData();
+  const featuredPosts = allPosts.slice(0, 3);
 
-* {
-  box-sizing: border-box;
-}
+  return (
+    <div className="min-h-screen overflow-x-hidden bg-gray-50">
+      <section className="bg-gradient-to-r from-blue-600 to-indigo-700 px-4 py-20 text-white sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl text-center">
+          <h1 className="mb-6 text-4xl font-bold md:text-5xl lg:text-6xl">TechBlog</h1>
+          <p className="mx-auto mb-8 max-w-3xl text-xl md:text-2xl">
+            Your trusted source for the latest technology news, in-depth programming tutorials,
+            honest gadget reviews, and insightful industry analysis.
+          </p>
+          <div className="flex flex-col justify-center gap-4 sm:flex-row">
+            <Link
+              href="/blog"
+              className="inline-flex items-center justify-center rounded-full bg-white px-8 py-3 font-semibold text-blue-600 transition-colors duration-200 hover:bg-gray-100"
+            >
+              Explore Our Blog
+            </Link>
+            <Link
+              href="/about"
+              className="inline-flex items-center justify-center rounded-full border-2 border-white px-8 py-3 font-semibold text-white transition-colors duration-200 hover:bg-white hover:text-blue-600"
+            >
+              Learn About Us
+            </Link>
+          </div>
+        </div>
+      </section>
 
-html,
-body {
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-  max-width: 100%;
-}
+      <section className="px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-12 text-center">
+            <h2 className="mb-4 text-3xl font-bold text-gray-900">Featured Articles</h2>
+            <p className="mx-auto max-w-2xl text-lg text-gray-600">
+              Discover our most popular and recent tech insights
+            </p>
+          </div>
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-inter);
-  line-height: 1.6;
-}
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {featuredPosts.map((post: PostData) => (
+              <article
+                key={post.id}
+                className="overflow-hidden rounded-lg bg-white shadow-md transition-shadow duration-300 hover:shadow-lg"
+              >
+                {post.coverImage && (
+                  <div className="h-48 bg-gray-200">
+                    <Image
+                      src={post.coverImage}
+                      alt={post.title}
+                      width={800}
+                      height={480}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                )}
+                <div className="p-6">
+                  <div className="mb-2 flex items-center">
+                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                      {post.category}
+                    </span>
+                    <span className="ml-2 text-sm text-gray-500">
+                      {new Date(post.date).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <h3 className="mb-2 text-xl font-semibold text-gray-900">
+                    <Link href={`/blog/${post.slug}`} className="transition-colors duration-200 hover:text-blue-600">
+                      {post.title}
+                    </Link>
+                  </h3>
+                  <p className="mb-4 line-clamp-3 text-gray-600">{post.description}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-500">By {post.author}</span>
+                    <Link href={`/blog/${post.slug}`} className="text-sm font-medium text-blue-600 hover:text-blue-800">
+                      Read more →
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
 
-img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
+          <div className="mt-10 text-center">
+            <Link
+              href="/blog"
+              className="inline-flex items-center justify-center rounded-full bg-blue-600 px-8 py-3 font-medium text-white transition-colors duration-200 hover:bg-blue-700"
+            >
+              View All Articles
+            </Link>
+          </div>
+        </div>
+      </section>
 
-/* Custom typography & markdown prose styling for blog posts */
-@layer utilities {
-  .prose {
-    color: #374151;
-    max-width: 65ch;
-  }
-  .prose h1, .prose h2, .prose h3, .prose h4 {
-    color: #111827;
-    font-weight: 700;
-    margin-top: 2em;
-    margin-bottom: 1em;
-    font-family: var(--font-syne);
-    line-height: 1.3;
-  }
-  .prose h1 { font-size: 2.25em; }
-  .prose h2 { font-size: 1.5em; }
-  .prose h3 { font-size: 1.25em; }
-  .prose p {
-    margin-top: 1.25em;
-    margin-bottom: 1.25em;
-  }
-  .prose a {
-    color: #2563eb;
-    text-decoration: underline;
-    text-decoration-color: #93c5fd;
-    text-underline-offset: 4px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-  }
-  .prose a:hover {
-    color: #1d4ed8;
-    text-decoration-color: #2563eb;
-  }
-  .prose strong {
-    color: #111827;
-    font-weight: 600;
-  }
+      <section className="bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <AdSlot className="my-4" />
+        </div>
+      </section>
 
-  /* Blockquote styling */
-  .prose blockquote {
-    font-weight: 500;
-    font-style: italic;
-    color: #4b5563;
-    border-left-width: 4px;
-    border-left-color: #3b82f6;
-    margin-top: 1.5em;
-    margin-bottom: 1.5em;
-    padding-left: 1em;
-    background-color: #eff6ff;
-    padding-top: 0.5em;
-    padding-bottom: 0.5em;
-    padding-right: 1em;
-    border-top-right-radius: 0.375rem;
-    border-bottom-right-radius: 0.375rem;
-  }
+      <section className="bg-white px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-12 text-center">
+            <h2 className="mb-4 text-3xl font-bold text-gray-900">Explore Topics</h2>
+            <p className="mx-auto max-w-2xl text-lg text-gray-600">
+              Find articles on the topics that matter most to you
+            </p>
+          </div>
 
-  /* Inline code snippet formatting */
-  .prose code {
-    color: #0f172a;
-    font-weight: 600;
-    font-size: 0.875em;
-    background-color: #f1f5f9;
-    padding: 0.2em 0.4em;
-    border-radius: 0.25rem;
-    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
-  }
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 p-6 text-white">
+              <h3 className="mb-2 text-xl font-bold">Artificial Intelligence</h3>
+              <p className="mb-4 text-blue-100">Explore the latest in AI, machine learning, and deep learning</p>
+              <Link href="/blog?category=AI" className="inline-block rounded bg-white/20 px-4 py-2 font-medium text-white transition-colors hover:bg-white/30">
+                Browse AI Articles
+              </Link>
+            </div>
 
-  /* Code blocks styles for markdown <pre> tags (often wrapped around <code>) */
-  .prose pre {
-    background-color: var(--code-bg);
-    color: var(--code-fg);
-    overflow-x: auto;
-    font-size: 0.875em;
-    line-height: 1.7142857;
-    margin-top: 1.7142857em;
-    margin-bottom: 1.7142857em;
-    border-radius: 0.5rem;
-    padding: 1.5em;
-    border: 1px solid var(--code-border);
-    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
-  }
-  .prose pre code {
-    background-color: transparent;
-    border-width: 0;
-    border-radius: 0;
-    padding: 0;
-    font-weight: 400;
-    color: inherit;
-    font-size: inherit;
-    font-family: inherit;
-    line-height: inherit;
-  }
+            <div className="rounded-lg bg-gradient-to-br from-green-500 to-green-600 p-6 text-white">
+              <h3 className="mb-2 text-xl font-bold">Programming</h3>
+              <p className="mb-4 text-green-100">Tutorials, best practices, and insights for developers</p>
+              <Link href="/blog?category=Programming" className="inline-block rounded bg-white/20 px-4 py-2 font-medium text-white transition-colors hover:bg-white/30">
+                Browse Programming
+              </Link>
+            </div>
 
-  /* Tables */
-  .prose table {
-    width: 100%;
-    table-layout: auto;
-    text-align: left;
-    margin-top: 2em;
-    margin-bottom: 2em;
-    font-size: 0.875em;
-    line-height: 1.7142857;
-  }
-  .prose thead {
-    color: #111827;
-    font-weight: 600;
-    border-bottom-width: 1px;
-    border-bottom-color: #d1d5db;
-  }
-  .prose thead th {
-    vertical-align: bottom;
-    padding-right: 0.5714286em;
-    padding-bottom: 0.5714286em;
-    padding-left: 0.5714286em;
-  }
-  .prose tbody tr {
-    border-bottom-width: 1px;
-    border-bottom-color: #e5e7eb;
-  }
-  .prose tbody td {
-    vertical-align: top;
-    padding-top: 0.5714286em;
-    padding-right: 0.5714286em;
-    padding-bottom: 0.5714286em;
-    padding-left: 0.5714286em;
-  }
+            <div className="rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 p-6 text-white">
+              <h3 className="mb-2 text-xl font-bold">Gadgets</h3>
+              <p className="mb-4 text-purple-100">In-depth reviews of the latest smartphones, laptops, and tech</p>
+              <Link href="/blog?category=Gadgets" className="inline-block rounded bg-white/20 px-4 py-2 font-medium text-white transition-colors hover:bg-white/30">
+                Browse Gadgets
+              </Link>
+            </div>
 
-  /* Responsive images */
-  .prose img {
-    margin-top: 2em;
-    margin-bottom: 2em;
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    max-width: 100%;
-    height: auto;
-    display: block;
-  }
+            <div className="rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 p-6 text-white">
+              <h3 className="mb-2 text-xl font-bold">Industry News</h3>
+              <p className="mb-4 text-orange-100">Breaking news and analysis from the world of technology</p>
+              <Link href="/blog?category=News" className="inline-block rounded bg-white/20 px-4 py-2 font-medium text-white transition-colors hover:bg-white/30">
+                Browse News
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
 
-  /* Lists */
-  .prose ul, .prose ol {
-    margin-top: 1.25em;
-    margin-bottom: 1.25em;
-    padding-left: 1.625em;
-  }
-  .prose ul {
-    list-style-type: disc;
-  }
-  .prose ol {
-    list-style-type: decimal;
-  }
-  .prose li {
-    margin-top: 0.5em;
-    margin-bottom: 0.5em;
-  }
+      <section className="bg-gray-50 px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="mb-4 text-3xl font-bold text-gray-900">Stay Updated</h2>
+          <p className="mb-8 text-lg text-gray-600">
+            Subscribe to our newsletter for the latest tech insights and tutorials
+          </p>
+
+          <div className="mx-auto max-w-md">
+            <NewsletterForm />
+          </div>
+
+          <p className="mt-4 text-sm text-gray-500">We respect your privacy. Unsubscribe at any time.</p>
+        </div>
+      </section>
+
+      <section className="bg-blue-600 px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl text-center text-white">
+          <h2 className="mb-4 text-3xl font-bold">Ready to Dive Deeper?</h2>
+          <p className="mb-8 text-xl">Join thousands of tech enthusiasts who read our articles daily</p>
+
+          <div className="flex flex-col justify-center gap-4 sm:flex-row">
+            <Link href="/contact" className="inline-flex items-center justify-center rounded-full bg-white px-8 py-3 font-semibold text-blue-600 transition-colors duration-200 hover:bg-gray-100">
+              Get In Touch
+            </Link>
+            <Link href="/blog" className="inline-flex items-center justify-center rounded-full border-2 border-white px-8 py-3 font-semibold text-white transition-colors duration-200 hover:bg-white hover:text-blue-600">
+              Start Reading
+            </Link>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
 }

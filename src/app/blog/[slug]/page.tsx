@@ -1,7 +1,10 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { getPostData, getAllPostIds } from '@/lib/posts';
 import AdSlot from '@/components/AdSlot';
 import AuthorBox from '@/components/AuthorBox';
+
+const SITE_URL = 'https://techblog-six-gamma.vercel.app';
 
 export async function generateStaticParams() {
   return await getAllPostIds();
@@ -10,20 +13,28 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const postData = await getPostData(slug);
+  const ogImage = postData.coverImage?.startsWith('http')
+    ? postData.coverImage
+    : `${SITE_URL}${postData.coverImage || '/logo.svg'}`;
+
   return {
     title: `${postData.title} - TechBlog`,
     description: postData.description,
+    alternates: {
+      canonical: `/blog/${slug}`,
+    },
     openGraph: {
       title: postData.title,
       description: postData.description,
       type: 'article',
+      url: `${SITE_URL}/blog/${slug}`,
       publishedTime: postData.date,
       authors: [postData.author],
       images: [
         {
-          url: postData.coverImage,
-          width: 800,
-          height: 600,
+          url: ogImage,
+          width: 1200,
+          height: 630,
           alt: postData.title,
         },
       ],
@@ -32,7 +43,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       card: 'summary_large_image',
       title: postData.title,
       description: postData.description,
-      images: [postData.coverImage],
+      images: [ogImage],
     },
   };
 }
@@ -42,23 +53,20 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
   const postData = await getPostData(slug);
 
   return (
-    <article className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Link
-          href="/blog"
-          className="text-blue-600 hover:underline mb-8 inline-block"
-        >
+    <article className="min-h-screen overflow-x-hidden bg-gray-50 py-12">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+        <Link href="/blog" className="mb-8 inline-block text-blue-600 hover:underline">
           ← Back to all posts
         </Link>
 
-        <div className="bg-white rounded-lg shadow-md p-8 mb-8">
+        <div className="mb-8 rounded-lg bg-white p-8 shadow-md">
           <header className="mb-8">
-            <div className="flex items-center mb-4">
-              <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
+            <div className="mb-4 flex items-center">
+              <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
                 {postData.category}
               </span>
               {postData.isUserContent && (
-                <span className="ml-2 px-3 py-1 bg-purple-100 text-purple-700 text-sm font-medium rounded-full">
+                <span className="ml-2 rounded-full bg-purple-100 px-3 py-1 text-sm font-medium text-purple-700">
                   Community post
                 </span>
               )}
@@ -67,9 +75,7 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
               </span>
             </div>
 
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              {postData.title}
-            </h1>
+            <h1 className="mb-4 text-4xl font-bold text-gray-900">{postData.title}</h1>
 
             <div className="flex items-center text-gray-600">
               <span>By {postData.author}</span>
@@ -80,7 +86,7 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
                 {postData.tags.map((tag: string) => (
                   <span
                     key={tag}
-                    className="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded"
+                    className="rounded bg-gray-100 px-2 py-1 text-sm text-gray-700"
                   >
                     #{tag}
                   </span>
@@ -90,11 +96,14 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
           </header>
 
           {postData.coverImage && (
-            <div className="mb-8 h-64 bg-gray-200 rounded-lg overflow-hidden">
-              <img
+            <div className="mb-8 h-64 overflow-hidden rounded-lg bg-gray-200">
+              <Image
                 src={postData.coverImage}
                 alt={postData.title}
-                className="w-full h-full object-cover"
+                width={1200}
+                height={630}
+                className="h-full w-full object-cover"
+                priority
               />
             </div>
           )}
@@ -112,10 +121,7 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
         </div>
 
         <div className="text-center">
-          <Link
-            href="/blog"
-            className="text-blue-600 hover:underline font-medium"
-          >
+          <Link href="/blog" className="font-medium text-blue-600 hover:underline">
             ← Back to all posts
           </Link>
         </div>
