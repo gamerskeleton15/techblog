@@ -38,20 +38,6 @@ export default function RootLayout({
         <NavbarContainer />
         <main className="min-h-screen pb-16">{children}</main>
         <Footer />
-
-        {/* Google tag (gtag.js) */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-RTZMZ4VEPD"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-RTZMZ4VEPD');
-          `}
-        </Script>
       </body>
     </html>
   );
